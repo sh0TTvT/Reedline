@@ -9,23 +9,31 @@ using System.Windows.Automation;
 internal sealed class UiDriver(int pid, string directory)
 {
     private nint window;
+    private readonly string traceFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Reedline","startup-trace.log");
+    private int traceLines;
     public void Run()
     {
         using var host = Process.GetProcessById(pid);
         Wait(() => { host.Refresh(); window = host.MainWindowHandle; return window != 0; }, "desktop window");
         SetForegroundWindow(window);
         Find("导入歌曲", ControlType.Button);
+        traceLines = File.ReadLines(traceFile).Count();
         Capture(Path.GetFullPath("artifacts/windows-studio.png"));
         Import(Path.GetFullPath("tests/fixtures/concert-a.mp3"), "concert-a");
-        Find("1 音", null);
+        TraceContains("Armed notes 1");
         var sheet = Path.Combine(directory, "Signal.txt");
         File.WriteAllText(sheet, "BPM=120\n1, 2:4 #4 1':2 0");
         Import(sheet, "Signal");
+        TraceContains("Armed notes 4");
         Click("游戏演奏");
-        Find("未找到前台的三角洲游戏窗口", null);
+        TraceContains("Transport error");
         Click("收进托盘");
         Wait(() => !IsWindowVisible(window), "window hidden in the notification area");
         File.WriteAllText(Path.Combine(directory,"ui-result"), "imported MP3 and score, foreground guard and tray hide passed");
+    }
+    private void TraceContains(string text)
+    {
+        Wait(() => File.ReadLines(traceFile).Skip(traceLines).Any(line => line.EndsWith(" " + text,StringComparison.Ordinal)),text);
     }
     private void Import(string path, string title)
     {

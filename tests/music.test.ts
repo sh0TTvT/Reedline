@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { writeMidi, type MidiEvent } from 'midi-file'
-import { arrange, activeIndex } from '../src/music/score'
+import { arrange, activeIndex, timeText } from '../src/music/score'
 import { readNotation } from '../src/music/notation'
 import { readMidi } from '../src/music/midi'
 import { transcribe } from '../src/music/pitch'
 
 describe('notation and fingering', () => {
+  it('displays durations for sub-second audio clips', () => {
+    expect(timeText(.6)).toBe('0:00.6')
+    expect(timeText(62)).toBe('1:02')
+  })
   it('reads rests, ties, fractional beats, sharps, flats and octaves', () => {
     const s = readNotation("曲名=试曲\nBPM=120\n0 1, - | #2:0.5 b3:.5 1' 0:2")
     expect(s.title).toBe('试曲')

@@ -9,9 +9,10 @@ export const defaultKeys = ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',']
 export const keyOptions = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', ',', '.', '/', ';']
 export const noteNames = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B']
 export const pitchName = (n: number) => noteNames[n % 12] + (Math.floor(n / 12) - 1)
-export function timeText(seconds: number) {
+export function timeText(seconds: number, tenths = seconds > 0 && seconds < 1) {
   const n = Math.max(0, Math.floor(seconds + 0.0001))
-  return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0')
+  const base = Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0')
+  return tenths ? base + '.' + Math.floor(Math.max(0, seconds) * 10 + .0001) % 10 : base
 }
 export type Finger = { lane: number; octave: number; sharp: boolean; pitch: number }
 export type PlayNote = Note & Finger

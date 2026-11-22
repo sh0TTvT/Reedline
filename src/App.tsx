@@ -96,7 +96,7 @@ export default function App() {
         <div className="hero-photo"/><div className="hero-content" key={song.id}><div className="hero-label"><i/> 当前曲目</div>
           <h2 title={song.title}>{song.title}</h2><p>{song.credit} <span> / </span> {song.kind === '示例' ? '内置曲谱' : '本地曲库'}</p>
           <div className="hero-meta"><span><Icon name="clock" size={15}/>{timeText(arr.duration / prefs.speed)}</span>
-            <span><Icon name="music" size={15}/>{arr.notes.length} 音</span>{song.bpm && <span>{Math.round(song.bpm * prefs.speed)} BPM</span>}</div>
+            <span><Icon name="music" size={15}/>{arr.notes.length + ' 音'}</span>{song.bpm && <span>{Math.round(song.bpm * prefs.speed)} BPM</span>}</div>
         </div></section>
       <div className="transport"><div className="transport-buttons">
         <button className="primary" disabled={!loaded || (!!desktop && !player.connected)} onClick={() => desktop ? player.toggleGame() : setPanel('desktop')}>

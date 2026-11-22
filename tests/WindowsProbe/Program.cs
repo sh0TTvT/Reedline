@@ -56,6 +56,7 @@ internal sealed class Receiver : Form
         }
         else if (command == "exit") Close();
         else throw new ArgumentException(command);
+        File.AppendAllText(Path.Combine(dir, "commands"), command + " foreground=" + GetForegroundWindow() + " receiver=" + Handle + "\n");
         File.WriteAllText(Path.Combine(dir, "ack"), parts[0]);
     }
     protected override void WndProc(ref Message m)

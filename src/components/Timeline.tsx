@@ -35,7 +35,7 @@ export function Timeline({ arr, pos, speed, seek, locked }: { arr: Arrangement; 
     for (let i = 0; i <= 8; i++) {
       const xx = left + width * i / 8; ctx.moveTo(xx, 7); ctx.lineTo(xx, 119)
       if (i % 2 === 0) {
-        ctx.textAlign = i === 8 ? 'right' : 'left'; ctx.fillText(timeText((start + span * i / 8) / speed), xx + (i === 8 ? 0 : 2), 138)
+        ctx.textAlign = i === 8 ? 'right' : 'left'; ctx.fillText(timeText((start + span * i / 8) / speed, span / speed < 4), xx + (i === 8 ? 0 : 2), 138)
       }
     }
     ctx.stroke(); ctx.textAlign = 'left'

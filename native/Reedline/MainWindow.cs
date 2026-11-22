@@ -102,7 +102,9 @@ internal sealed class MainWindow : Form
                     Send(new { type = "hello", f6 = registered.Contains(6), f8 = registered.Contains(8) });
                     break;
                 case "prepare":
-                    player.Prepare(msg.GetProperty("plan").Deserialize<ScorePlan>(Json)!, msg.GetProperty("start").GetDouble());
+                    var plan = msg.GetProperty("plan").Deserialize<ScorePlan>(Json)!;
+                    player.Prepare(plan, msg.GetProperty("start").GetDouble());
+                    if (player.State.Phase == "ready") Program.StartupTrace("Armed notes " + plan.Notes.Length);
                     break;
                 case "seek": player.Seek(msg.GetProperty("position").GetDouble()); break;
                 case "editing": blockStart = msg.GetProperty("value").GetBoolean(); break;
@@ -143,6 +145,7 @@ internal sealed class MainWindow : Form
         if (change)
         {
             Program.StartupTrace("Transport " + state.Phase);
+            if (state.Message.Length > 0) Program.StartupTrace("Playback message " + state.Message);
             tray.Text = "Reedline · " + (state.Phase switch
             {
                 "countdown" => "准备演奏", "playing" => "正在游戏中演奏", "paused" => "已暂停",

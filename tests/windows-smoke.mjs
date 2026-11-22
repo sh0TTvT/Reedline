@@ -87,7 +87,7 @@ try {
   for (let i=1;i<keyTimes.length;i++) assert.ok(Math.abs(keyTimes[i]-keyTimes[0]-expected[i]) < 180, 'note timing outside 180 ms')
   console.log('PASS focus loss, full hidden song, ordered Windows keyboard/mouse events and note timing', keyTimes)
 } catch (error) {
-  console.error(await trace(), await read(join(process.env.LOCALAPPDATA,'Reedline','startup-error.log')))
+  console.error(await trace(), await read(join(directory,'commands')), await read(join(process.env.LOCALAPPDATA,'Reedline','startup-error.log')))
   const result = spawnSync('pwsh',['-NoProfile','-File',resolve('tests/windows-diagnostics.ps1'),String(app.pid)],{encoding:'utf8',timeout:20000})
   console.error(result.stdout,result.stderr)
   throw error
