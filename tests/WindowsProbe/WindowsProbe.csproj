@@ -6,4 +6,5 @@
     <!-- A controlled foreground receiver for CI. This project is never packaged. -->
     <AssemblyName>DeltaForceClient-Win64-Shipping</AssemblyName>
   </PropertyGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" /></ItemGroup>
 </Project>

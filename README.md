@@ -68,4 +68,11 @@ Windows 集成测试启动发布后的程序并收进托盘，使用独立的 Wi
 - 单鼠标变调、音域限制和时序对照参考 [auto_music_player](https://github.com/xiaominaimoyu/auto_music_player)。
 - 控件图标由 [Morphicons](https://github.com/guillermolg00/morphicons) 驱动，遵循系统减少动态效果的设置。MIDI 读取使用 [midi-file](https://github.com/carter-thaxton/midi-file)，音频音高检测使用 [Pitchy](https://github.com/ianprime0509/pitchy)。
 
-口琴封面由内置图像生成工具制作。提示词要点为深青色摄影棚中的银色十孔口琴、黄铜簧板、右侧三分之四视角、左侧留白、无标志和文字。发行包的 `licenses` 目录包含随附依赖和字体的许可。
+发行包的 `licenses` 目录包含随附依赖和字体的许可。口琴封面由内置 imagegen 工具制作。[封面原图](public/harmonica.webp)
+
+<details>
+<summary>封面生成提示词</summary>
+
+Product-mockup. Wide studio product photograph for the cover panel of a Chinese harmonica music workstation. A single premium unbranded ten-hole diatonic pocket harmonica, brushed silver top cover, graphite hole comb, thin warm brass reed plates. Floating very slightly over a dark midnight petrol teal studio surface with soft contact shadow. Three-quarter top/front view, horizontal long axis tilted a little upward to the right, beautifully legible row of rectangular holes, contained in the right two thirds of the wide cinematic composition, left third is plain near-black teal negative space for separate UI type. Moody directional softbox rim light, finely detailed metal highlights, realistic editorial music-instrument photography. No writing, no logo, no hands, no extra objects, no framing. Wide landscape, ideally 3:1.
+
+</details>

@@ -2,7 +2,6 @@ param([int]$AppProcessId)
 $ErrorActionPreference = 'Continue'
 Get-Process -Id $AppProcessId | Select-Object ProcessName,Id,SessionId,MainWindowTitle,Responding
 Get-Process msedgewebview2 -ErrorAction SilentlyContinue | Select-Object ProcessName,Id,SessionId,Responding
-Get-NetTCPConnection -LocalPort 19376 -ErrorAction SilentlyContinue | Select-Object State,LocalAddress,OwningProcess
 Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddMinutes(-5)} -ErrorAction SilentlyContinue |
     Where-Object { $_.Message -match 'Reedline.exe' } | Select-Object -First 3 -ExpandProperty Message
 Add-Type -AssemblyName System.Windows.Forms,System.Drawing

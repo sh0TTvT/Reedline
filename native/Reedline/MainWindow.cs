@@ -142,6 +142,7 @@ internal sealed class MainWindow : Form
         if (force || change || (Visible && state != previous)) Send(new { type = "state", state });
         if (change)
         {
+            Program.StartupTrace("Transport " + state.Phase);
             tray.Text = "Reedline · " + (state.Phase switch
             {
                 "countdown" => "准备演奏", "playing" => "正在游戏中演奏", "paused" => "已暂停",

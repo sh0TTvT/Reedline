@@ -7,6 +7,17 @@ internal static class Program
     private static void Main(string[] args)
     {
         ApplicationConfiguration.Initialize();
+        if (args.Length == 3 && args[0] == "--drive")
+        {
+            try { new UiDriver(int.Parse(args[1]), args[2]).Run(); }
+            catch (Exception e)
+            {
+                File.WriteAllText(Path.Combine(args[2], "ui-error"), e.ToString());
+                UiDriver.Capture(Path.GetFullPath("artifacts/windows-ui-error.png"));
+                Environment.ExitCode = 1;
+            }
+            return;
+        }
         Application.Run(new Receiver(args[0]));
     }
 }
@@ -27,13 +38,15 @@ internal sealed class Receiver : Form
         Show(); WindowState = FormWindowState.Normal; TopMost = true; Activate();
         SetForegroundWindow(Handle);
         Cursor.Position = PointToScreen(new Point(ClientSize.Width/2,ClientSize.Height/2));
+        if (GetForegroundWindow() != Handle) { mouse_event(2,0,0,0,0); mouse_event(4,0,0,0,0); }
     }
     private void ReadCommand()
     {
         var path = Path.Combine(dir,"command");
         if (!File.Exists(path)) return;
-        string command;
-        try { command = File.ReadAllText(path).Trim(); File.Delete(path); } catch (IOException) { return; }
+        string[] parts;
+        try { parts = File.ReadAllText(path).Trim().Split(' ', 2); File.Delete(path); } catch (IOException) { return; }
+        string command = parts[1];
         if (command == "focus") FocusReceiver();
         else if (command == "blur") { TopMost = false; Hide(); }
         else if (command == "F6" || command == "F8")
@@ -42,6 +55,8 @@ internal sealed class Receiver : Form
             keybd_event(key,0,0,0); keybd_event(key,0,2,0);
         }
         else if (command == "exit") Close();
+        else throw new ArgumentException(command);
+        File.WriteAllText(Path.Combine(dir, "ack"), parts[0]);
     }
     protected override void WndProc(ref Message m)
     {
@@ -54,5 +69,7 @@ internal sealed class Receiver : Form
         base.WndProc(ref m);
     }
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint hwnd);
+    [DllImport("user32.dll")] private static extern nint GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern void mouse_event(uint flags,int x,int y,uint data,nuint extra);
     [DllImport("user32.dll")] private static extern void keybd_event(byte vk, byte scan, uint flags, nuint extra);
 }
