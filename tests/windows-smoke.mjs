@@ -81,6 +81,8 @@ try {
   await command('F6')
   await phase('finished')
   const rows = (await log()).slice(offset).trim().split('\n').map(l => l.trim().split(' '))
+  // RegisterHotKey can leave the initiating F6 key-up in the receiver before the countdown.
+  if (rows[0]?.[1] === 'ku:117') rows.shift()
   assert.deepEqual(rows.map(r => r[1]), ['md:1','kd:90','ku:90','mu:1','kd:88','ku:88','md:4','kd:86','ku:86','mu:4','kd:188','ku:188'])
   const keyTimes = rows.filter(r=>r[1].startsWith('kd:')).map(r=>Number(r[0]))
   const expected = [0,500,2500,3000]
