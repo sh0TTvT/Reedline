@@ -45,6 +45,7 @@ internal sealed class MainWindow : Form
 
     private async Task InitializeBrowser()
     {
+        Program.StartupTrace("Initializing WebView2");
         foreach (var (id, key) in new[] { (6, Keys.F6), (8, Keys.F8) })
             if (RegisterHotKey(Handle, id, 0x4000, (uint)key)) registered.Add(id);
         try
@@ -54,8 +55,11 @@ internal sealed class MainWindow : Form
             var profile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Reedline", "WebView");
             if (File.Exists(Path.Combine(AppContext.BaseDirectory, "WebView2Loader.dll")))
                 CoreWebView2Environment.SetLoaderDllFolderPath(AppContext.BaseDirectory);
+            Program.StartupTrace("Runtime " + CoreWebView2Environment.GetAvailableBrowserVersionString());
             var env = await CoreWebView2Environment.CreateAsync(null, profile);
+            Program.StartupTrace("Browser environment created");
             await browser.EnsureCoreWebView2Async(env);
+            Program.StartupTrace("WebView2 controller ready");
             var web = browser.CoreWebView2;
             web.SetVirtualHostNameToFolderMapping("reedline.local", root, CoreWebView2HostResourceAccessKind.DenyCors);
             web.Settings.AreDefaultContextMenusEnabled = false;
@@ -93,6 +97,7 @@ internal sealed class MainWindow : Form
             switch (msg.GetProperty("type").GetString())
             {
                 case "ready":
+                    Program.StartupTrace("Workstation ready");
                     ready = true;
                     Send(new { type = "hello", f6 = registered.Contains(6), f8 = registered.Contains(8) });
                     break;

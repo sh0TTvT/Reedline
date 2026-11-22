@@ -1,5 +1,5 @@
 import { chromium } from '@playwright/test'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, rename, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -9,9 +9,11 @@ import assert from 'node:assert/strict'
 const directory = await mkdtemp(join(tmpdir(), 'reedline-test-'))
 const port = 19376
 const app = spawn(resolve('artifacts/app/Reedline.exe'), [], {env: {
-  ...process.env, WEBVIEW2_USER_DATA_FOLDER: join(directory, 'webview'),
+  ...process.env, REEDLINE_STARTUP_TRACE: '1', WEBVIEW2_USER_DATA_FOLDER: join(directory, 'webview'),
   WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: '--remote-debugging-port=' + port,
 }})
+app.stdout.pipe(process.stdout)
+app.stderr.pipe(process.stderr)
 let probe, client, page
 const log = async () => { try { return await readFile(join(directory, 'events'), 'utf8') } catch { return '' } }
 async function until(probeFn, description, timeout=20000) {
@@ -108,8 +110,11 @@ try {
   console.log('PASS focus loss, full hidden song, ordered physical keyboard/mouse events and note timing', keyTimes)
 } finally {
   if (!page) {
-    const diagnostic = join(process.env.LOCALAPPDATA, 'Reedline', 'startup-error.log')
-    try { console.error(await readFile(diagnostic, 'utf8')) } catch {}
+    for (const name of ['startup-trace.log','startup-error.log']) {
+      try { console.error(await readFile(join(process.env.LOCALAPPDATA,'Reedline',name),'utf8')) } catch {}
+    }
+    const result = spawnSync('pwsh',['-NoProfile','-File',resolve('tests/windows-diagnostics.ps1'),String(app.pid)],{encoding:'utf8',timeout:20000})
+    console.error(result.stdout, result.stderr)
   }
   if (page) {
     try { console.log('Last desktop states:', await page.evaluate(() => window.reedlineTestStates?.slice(-5))) } catch {}
