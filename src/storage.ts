@@ -30,11 +30,11 @@ export async function libraryWrite(song: Song | string) {
 }
 export type Settings = {
   keys: string[]; buttons: string[]; combine: boolean; countdown: number
-  speed: number; transpose: number; volume: number; last: string
+  speed: number; transpose: number; volume: number; last: string; tracks: Record<string, number>
 }
 export const defaults: Settings = {
   keys: defaultKeys, buttons: ['left','right','middle'], combine: false, countdown: 3,
-  speed: 1, transpose: 0, volume: 0.55, last: 'demo-0',
+  speed: 1, transpose: 0, volume: 0.55, last: 'demo-0', tracks: {},
 }
 export function readSettings(): Settings {
   try {
@@ -46,6 +46,7 @@ export function readSettings(): Settings {
       combine: p.combine === true, countdown: Math.round(bounded(p.countdown, 1, 10, 3)),
       speed: bounded(p.speed, 0.5, 2, 1), transpose: Math.round(bounded(p.transpose, -12, 12, 0)),
       volume: bounded(p.volume, 0, 1, 0.55), last: typeof p.last === 'string' ? p.last : defaults.last,
+      tracks: Object.fromEntries(Object.entries(p.tracks ?? {}).filter(([,v]) => typeof v === 'number' && Number.isInteger(v) && v >= 0)) as Record<string, number>,
     }
   } catch { return { ...defaults } }
 }

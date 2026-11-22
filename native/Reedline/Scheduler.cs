@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 
 namespace Reedline;
 
@@ -26,12 +28,15 @@ internal sealed class Scheduler : IDisposable
     {
         lock (gate)
         {
+            if (quitting) return;
             try { action(); } catch (Exception e) { transport.Fail(e.Message); }
             wake.Set();
         }
     }
     private void Loop()
     {
+        using var timer = new MusicTimer();
+        WaitHandle[] waits = [wake, timer];
         while (true)
         {
             int wait;
@@ -41,7 +46,8 @@ internal sealed class Scheduler : IDisposable
                 transport.Tick(Now);
                 wait = transport.NeedsTicks ? 4 : Timeout.Infinite;
             }
-            wake.WaitOne(wait);
+            if (wait > 0 && timer.Arm(wait)) WaitHandle.WaitAny(waits);
+            else wake.WaitOne(wait);
         }
     }
     public void Dispose()
@@ -54,5 +60,20 @@ internal sealed class Scheduler : IDisposable
         }
         thread.Join();
         wake.Dispose();
+    }
+
+    // A one-shot high-resolution wait keeps notes on time while the window is hidden.
+    // The separate wake event interrupts the wait for a hotkey or shutdown.
+    private sealed class MusicTimer : WaitHandle
+    {
+        internal MusicTimer() => SafeWaitHandle = CreateWaitableTimerExW(0, 0, 2, 0x100002);
+        internal bool Arm(int milliseconds)
+        {
+            if (SafeWaitHandle.IsInvalid) return false;
+            long relativeDue = -10000L * milliseconds;
+            return SetWaitableTimer(SafeWaitHandle, ref relativeDue, 0, 0, 0, false);
+        }
+        [DllImport("kernel32.dll")] private static extern SafeWaitHandle CreateWaitableTimerExW(nint attributes, nint name, uint flags, uint access);
+        [DllImport("kernel32.dll")] private static extern bool SetWaitableTimer(SafeWaitHandle timer, ref long due, int period, nint callback, nint argument, bool resume);
     }
 }

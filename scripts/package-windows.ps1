@@ -17,11 +17,12 @@ $fft.Substring($fft.IndexOf('#### LICENSE')) | Set-Content -Encoding utf8 "$lega
 $cache = (dotnet nuget locals global-packages --list) -replace '^.*?:\s*',''
 $wvVersion = ([xml](Get-Content -Raw native/Reedline/Reedline.csproj)).Project.ItemGroup.PackageReference.Version
 $wv = Join-Path $cache "microsoft.web.webview2/$wvVersion"
+Copy-Item "$wv/runtimes/win-x64/native/WebView2Loader.dll" artifacts/app/WebView2Loader.dll
 Copy-Item "$wv/LICENSE.txt" "$legal/WebView2.txt"
 Copy-Item "$wv/NOTICE.txt" "$legal/WebView2-NOTICE.txt"
 foreach ($runtime in @('microsoft.netcore.app.runtime.win-x64','microsoft.windowsdesktop.app.runtime.win-x64')) {
     $versionDir = Get-ChildItem (Join-Path $cache $runtime) -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    Get-ChildItem $versionDir.FullName -File | Where-Object Name -match 'LICENSE|ThirdPartyNotices' | ForEach-Object {
+    Get-ChildItem $versionDir.FullName -File | Where-Object Name -match 'LICENSE|THIRD.?PARTY.?NOTICES' | ForEach-Object {
         Copy-Item $_.FullName (Join-Path $legal ($runtime + '-' + $_.Name))
     }
 }

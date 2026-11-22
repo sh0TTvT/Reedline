@@ -39,19 +39,23 @@ jobs:
           }
       - name: Compile and package Windows x64
         run: ./scripts/package-windows.ps1
-      - name: Build controlled input receiver
-        run: dotnet publish tests/WindowsProbe/WindowsProbe.csproj -c Release -r win-x64 --self-contained false -o artifacts/probe
-      - name: Verify packaged app in tray with real Windows input
-        run: node tests/windows-smoke.mjs
       - name: Verify installer and uninstaller
         shell: pwsh
         run: |
           $setup = (Get-ChildItem artifacts/release/*setup.exe).FullName
           $location = Join-Path $env:RUNNER_TEMP 'Reedline install check'
-          $p = Start-Process $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$location`"") -Wait -PassThru
-          if ($p.ExitCode -ne 0 -or !(Test-Path "$location/Reedline.exe") -or !(Test-Path "$location/wwwroot/index.html")) { throw "Installer failed: $($p.ExitCode)" }
+          $log = Join-Path $env:RUNNER_TEMP 'reedline-install.log'
+          $p = Start-Process $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/LOG=`"$log`""),("/DIR=`"$location`"") -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or !(Test-Path "$location/Reedline.exe") -or !(Test-Path "$location/wwwroot/index.html")) {
+            Get-Content $log -Tail 40
+            throw "Installer failed: $($p.ExitCode)"
+          }
           $p = Start-Process (Join-Path $location 'unins000.exe') -ArgumentList '/VERYSILENT','/NORESTART' -Wait -PassThru
           if ($p.ExitCode -ne 0 -or (Test-Path "$location/Reedline.exe")) { throw 'Uninstall failed' }
+      - name: Build controlled input receiver
+        run: dotnet publish tests/WindowsProbe/WindowsProbe.csproj -c Release -r win-x64 --self-contained false -o artifacts/probe
+      - name: Verify packaged app in tray with real Windows input
+        run: node tests/windows-smoke.mjs
       - uses: actions/upload-artifact@v7
         with:
           name: Reedline-windows-x64

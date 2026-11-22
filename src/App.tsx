@@ -16,7 +16,7 @@ const phases: Record<string, string> = { ready: '待命', idle: '待命', countd
 type Panel = 'import' | 'settings' | 'remove' | 'desktop' | null
 export default function App() {
   const [prefs, setPrefs] = useState(readSettings), [songs, setSongs] = useState<Song[]>(demos)
-  const [selected, setSelected] = useState(prefs.last), [trackNo, setTrackNo] = useState(-1)
+  const [selected, setSelected] = useState(prefs.last)
   const [loaded, setLoaded] = useState(false), [search, setSearch] = useState('')
   const [panel, setPanel] = useState<Panel>(null), [files, setFiles] = useState<File[]>([])
   const [toast, setToast] = useState(''), toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -24,6 +24,7 @@ export default function App() {
   const [drawer, setDrawer] = useState(false)
   const notice = useCallback((message: string) => { setToast(message); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(''), 5200) }, [])
   const song = songs.find(s => s.id === selected) ?? demos[0]
+  const trackNo = prefs.tracks[song.id] ?? song.preferred
   const t = trackNo >= 0 && trackNo < song.tracks.length ? trackNo : song.preferred
   const track = song.tracks[t]
   const arr = useMemo(() => arrange(track, prefs.transpose, prefs.combine), [track, prefs.transpose, prefs.combine])
@@ -33,7 +34,7 @@ export default function App() {
   const note = (player.local === 'playing' || player.state.phase === 'playing') && noteIndex >= 0 ? arr.notes[noteIndex] : null
   const result = songs.filter(s => (s.title + ' ' + s.credit + ' ' + s.kind).toLowerCase().includes(search.trim().toLowerCase()))
   const update = (v: Partial<Prefs>) => setPrefs(p => ({ ...p, ...v }))
-  useEffect(() => { libraryRead().then(custom => setSongs([...demos, ...custom])).catch(() => notice('本地曲库暂时不可用。')).finally(() => setLoaded(true)) }, [notice])
+  useEffect(() => { libraryRead().then(custom => setSongs([...custom.sort((a,b) => (b.addedAt ?? 0) - (a.addedAt ?? 0)), ...demos])).catch(() => notice('本地曲库暂时不可用。')).finally(() => setLoaded(true)) }, [notice])
   useEffect(() => { try { localStorage.setItem('reedline-settings', JSON.stringify(prefs)) } catch { notice('偏好设置无法保存到本机。') } }, [prefs, notice])
   useEffect(() => { send('editing', { value: !!panel }) }, [panel, player.connected])
   useEffect(() => {
@@ -47,13 +48,18 @@ export default function App() {
   function choose(s: Song) {
     if (player.active) return
     if (s.id !== selected || player.local !== 'idle') player.stop()
-    setSelected(s.id); setTrackNo(-1); update({ last: s.id }); setDrawer(false)
+    setSelected(s.id); update({ last: s.id }); setDrawer(false)
   }
   function imported(s: Song) {
-    setSongs(list => [...list, s]); setSelected(s.id); setTrackNo(-1); setSearch(''); update({ last: s.id }); notice('已加入曲库 · ' + s.title)
+    setSongs(list => [s, ...list]); setSelected(s.id); setSearch(''); update({ last: s.id }); notice('已加入曲库 · ' + s.title)
   }
   async function removeSong() {
-    try { await libraryWrite(song.id); setSongs(list => list.filter(s => s.id !== song.id)); choose(demos[0]); setPanel(null); notice('已从曲库移除。') }
+    try {
+      await libraryWrite(song.id)
+      setSongs(list => list.filter(s => s.id !== song.id))
+      const tracks = { ...prefs.tracks }; delete tracks[song.id]
+      update({ tracks }); choose(demos[0]); setPanel(null); notice('已从曲库移除。')
+    }
     catch { notice('曲库写入失败，歌曲仍保存在本机。') }
   }
   function tap(lane: number) {
@@ -109,7 +115,7 @@ export default function App() {
         <div className="card-head"><h2><Icon name="wave" size={19}/>旋律时间线</h2><div className="meter-read"><span className={'state-dot' + (busy ? ' on' : '')}/><span role="status">{stateLabel}</span><b>{timeText(player.pos / prefs.speed)} <em>/ {timeText(arr.duration / prefs.speed)}</em></b></div></div>
         <Timeline arr={arr} pos={player.pos} speed={prefs.speed} seek={player.seek} locked={player.active}/>
         <input className="seek" type="range" aria-label="全曲进度" min="0" max={arr.duration} step=".05" disabled={player.active} value={player.pos} onChange={e => player.seek(Number(e.target.value))}/>
-        <div className="mix-row"><label>音轨<select aria-label="音轨" disabled={busy || song.tracks.length < 2} value={t} onChange={e => { player.stop(); setTrackNo(Number(e.target.value)) }}>
+        <div className="mix-row"><label>音轨<select aria-label="音轨" disabled={busy || song.tracks.length < 2} value={t} onChange={e => { player.stop(); update({ tracks: { ...prefs.tracks, [song.id]: Number(e.target.value) } }) }}>
           {song.tracks.map((v,i) => <option key={i} value={i}>{v.name}</option>)}</select></label>
           <label>速度<select aria-label="演奏速度" value={prefs.speed} disabled={busy} onChange={e => update({speed: Number(e.target.value)})}>
             {[.5,.75,.9,1,1.1,1.25,1.5,2].map(v => <option key={v} value={v}>{v.toFixed(2).replace(/0$/, '')}×</option>)}</select></label>

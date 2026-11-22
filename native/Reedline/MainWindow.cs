@@ -52,6 +52,8 @@ internal sealed class MainWindow : Form
             var root = Path.Combine(AppContext.BaseDirectory, "wwwroot");
             if (!File.Exists(Path.Combine(root, "index.html"))) throw new IOException("缺少界面文件，请完整解压便携包或重新安装。");
             var profile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Reedline", "WebView");
+            if (File.Exists(Path.Combine(AppContext.BaseDirectory, "WebView2Loader.dll")))
+                CoreWebView2Environment.SetLoaderDllFolderPath(AppContext.BaseDirectory);
             var env = await CoreWebView2Environment.CreateAsync(null, profile);
             await browser.EnsureCoreWebView2Async(env);
             var web = browser.CoreWebView2;
@@ -69,6 +71,10 @@ internal sealed class MainWindow : Form
         }
         catch (Exception e)
         {
+            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Reedline");
+            try { Directory.CreateDirectory(directory); File.WriteAllText(Path.Combine(directory, "startup-error.log"), e.ToString()); }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
             MessageBox.Show(this, "无法打开演奏台。请确认已安装 Microsoft Edge WebView2 运行时。\n\n" + e.Message, "Reedline");
             Close();
         }
@@ -146,6 +152,7 @@ internal sealed class MainWindow : Form
         if (WindowState == FormWindowState.Minimized && tray is not null)
         {
             Hide();
+            meter.Interval = 500;
             if (!showingTip)
             {
                 showingTip = true;
@@ -153,7 +160,7 @@ internal sealed class MainWindow : Form
             }
         }
     }
-    private void RestoreWindow() { Show(); WindowState = FormWindowState.Normal; Activate(); Report(true); }
+    private void RestoreWindow() { Show(); WindowState = FormWindowState.Normal; meter.Interval = 85; Activate(); Report(true); }
     private void PowerChanged(object sender, PowerModeChangedEventArgs e) { if (e.Mode == PowerModes.Suspend) player.Stop(); }
     private void SessionChanged(object sender, SessionSwitchEventArgs e) { if (e.Reason == SessionSwitchReason.SessionLock) player.Stop(); }
     protected override void WndProc(ref Message m)

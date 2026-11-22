@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { writeMidi } from 'midi-file'
+import { readFile } from 'node:fs/promises'
 
 test('preview, pause, seek and remap keys with keyboard-accessible dialogs', async ({page}) => {
   const errors: string[] = []
@@ -51,6 +52,8 @@ test('imports a real MIDI, selects its second channel and reports invalid files'
   await page.getByLabel('选择歌曲文件').setInputFiles({name:'合奏.mid',mimeType:'audio/midi',buffer:Buffer.from(midi)})
   await expect(page.getByRole('heading',{name:'合奏'})).toBeVisible()
   await page.getByLabel('音轨',{exact:true}).selectOption('0')
+  await page.reload()
+  await expect(page.getByRole('heading',{name:'合奏'})).toBeVisible()
   await expect(page.getByLabel('音轨',{exact:true})).toHaveValue('0')
   await page.getByRole('button',{name:'导入歌曲'}).click()
   await page.getByLabel('选择歌曲文件').setInputFiles({name:'bad.mid',mimeType:'audio/midi',buffer:Buffer.from('broken')})
@@ -67,6 +70,19 @@ test('decodes and transcribes a WAV using the real import dialog and worker', as
   await page.getByRole('button',{name:'导入歌曲'}).click()
   await page.getByLabel('选择歌曲文件').setInputFiles({name:'口哨.wav',mimeType:'audio/wav',buffer:wav})
   await expect(page.getByRole('heading',{name:'口哨'})).toBeVisible()
+  await expect(page.locator('.hero-meta')).toContainText('1 音')
+})
+
+test('accepts an MP3 dropped onto the workbench', async ({page}) => {
+  await page.goto('/')
+  await expect(page.getByRole('button',{name:'导入歌曲'})).toBeEnabled()
+  const bytes = [...await readFile('tests/fixtures/concert-a.mp3')]
+  await page.evaluate(data => {
+    const files = new DataTransfer()
+    files.items.add(new File([Uint8Array.from(data)], '口琴练音.mp3', {type:'audio/mpeg'}))
+    document.querySelector('main')!.dispatchEvent(new DragEvent('drop',{dataTransfer:files,bubbles:true,cancelable:true}))
+  },bytes)
+  await expect(page.getByRole('heading',{name:'口琴练音'})).toBeVisible()
   await expect(page.locator('.hero-meta')).toContainText('1 音')
 })
 

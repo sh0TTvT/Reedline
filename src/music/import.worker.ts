@@ -8,7 +8,7 @@ export type ImportResponse = { progress: number } | { song: Song } | { error: st
 self.onmessage = (event: MessageEvent<ImportData>) => {
   const { mode, title, bytes } = event.data
   try {
-    const base = { title, id: crypto.randomUUID(), preferred: 0, cover: crypto.getRandomValues(new Uint8Array(1))[0] % 6 }
+    const base = { title, id: crypto.randomUUID(), preferred: 0, cover: crypto.getRandomValues(new Uint8Array(1))[0] % 6, addedAt: Date.now() }
     let song: Song
     if (mode === 'midi') {
       song = { ...base, kind: 'MIDI', credit: 'MIDI 文件', ...readMidi(new Uint8Array(bytes)) }

@@ -50,6 +50,10 @@ try {
   await mkdir('artifacts', {recursive:true})
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({path:'artifacts/windows-studio.png'})
+  await page.getByRole('button',{name:'导入歌曲'}).click()
+  await page.getByLabel('选择歌曲文件').setInputFiles(resolve('tests/fixtures/concert-a.mp3'))
+  await page.getByRole('heading',{name:'concert-a'}).waitFor()
+  assert.match(await page.locator('.hero-meta').innerText(), /1 音/)
   await page.getByRole('button',{name:'演奏设置'}).click()
   await page.getByLabel('演奏倒计时',{exact:true}).selectOption('1')
   await page.getByRole('button',{name:'完成',exact:true}).click()
@@ -103,6 +107,10 @@ try {
   for (let i=1;i<keyTimes.length;i++) assert.ok(Math.abs(keyTimes[i]-keyTimes[0]-expected[i]) < 180, 'note timing outside 180 ms')
   console.log('PASS focus loss, full hidden song, ordered physical keyboard/mouse events and note timing', keyTimes)
 } finally {
+  if (!page) {
+    const diagnostic = join(process.env.LOCALAPPDATA, 'Reedline', 'startup-error.log')
+    try { console.error(await readFile(diagnostic, 'utf8')) } catch {}
+  }
   if (page) {
     try { console.log('Last desktop states:', await page.evaluate(() => window.reedlineTestStates?.slice(-5))) } catch {}
   }
