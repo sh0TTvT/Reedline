@@ -1,0 +1,68 @@
+name: Windows build and playback checks
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Install frontend dependencies
+        run: npm ci
+      - name: Check score parsing and pitch detection
+        run: npm test
+      - name: Compile interface
+        run: npm run build
+      - name: Exercise import, preview, settings and small windows
+        run: npm run test:ui
+      - name: Check native transport
+        run: dotnet run --project tests/EngineChecks -c Release
+      - name: Locate installer compiler
+        shell: pwsh
+        run: |
+          if (!(Get-Command ISCC.exe -ErrorAction SilentlyContinue) -and
+              !(Test-Path "${env:ProgramFiles(x86)}/Inno Setup 6/ISCC.exe")) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE) { throw 'Inno Setup install failed' }
+          }
+      - name: Compile and package Windows x64
+        run: ./scripts/package-windows.ps1
+      - name: Build controlled input receiver
+        run: dotnet publish tests/WindowsProbe/WindowsProbe.csproj -c Release -r win-x64 --self-contained false -o artifacts/probe
+      - name: Verify packaged app in tray with real Windows input
+        run: node tests/windows-smoke.mjs
+      - name: Verify installer and uninstaller
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem artifacts/release/*setup.exe).FullName
+          $location = Join-Path $env:RUNNER_TEMP 'Reedline install check'
+          $p = Start-Process $setup -ArgumentList '/VERYSILENT','/NORESTART','/SUPPRESSMSGBOXES',("/DIR=`"$location`"") -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or !(Test-Path "$location/Reedline.exe") -or !(Test-Path "$location/wwwroot/index.html")) { throw "Installer failed: $($p.ExitCode)" }
+          $p = Start-Process (Join-Path $location 'unins000.exe') -ArgumentList '/VERYSILENT','/NORESTART' -Wait -PassThru
+          if ($p.ExitCode -ne 0 -or (Test-Path "$location/Reedline.exe")) { throw 'Uninstall failed' }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Reedline-windows-x64
+          path: artifacts/release/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Windows-verification
+          path: |
+            artifacts/windows-*.png
+            artifacts/windows-input.log
+            test-results/**/error-context.md
+          if-no-files-found: ignore

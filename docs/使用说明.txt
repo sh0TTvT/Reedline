@@ -1,0 +1,19 @@
+Reedline · 口琴演奏台
+
+1. 打开 Reedline.exe，在左侧选歌或点击“导入歌曲”。便携版请先完整解压。
+2. 点击“试听”检查旋律。MIDI 可以选音轨，速度和移调均可调整。
+3. 点击右上角托盘按钮或最小化，让工具在后台待命。
+4. 回到三角洲行动，拿起口琴，打开自由演奏界面，关闭游戏内聊天框。
+5. 按 F6 开始。默认倒计时 3 秒。再按 F6 暂停或继续，F8 停止并回到开头。
+6. 双击 Windows 通知区域的绿色图标返回。右键图标可控制演奏或退出。
+
+支持 MIDI、UTF-8 数字简谱、WAV、MP3、M4A、OGG 和 FLAC。
+清唱或单音乐器录音适合音频转谱。复杂伴奏可能识别出其他声部，建议先试听。
+工具默认用 Z X C V B N M 和逗号。鼠标左键降八度、右键升八度、中键升半音。
+如果改过游戏键位，可在“演奏设置”里对齐。
+切出游戏会停止并释放按键。切回游戏后按 F6 可从断点继续。
+
+Windows 10 22H2 / 11 x64，需 Microsoft Edge WebView2 Runtime。
+缺少 WebView2 时可使用安装版，或从微软页面安装 Evergreen Runtime。
+https://developer.microsoft.com/microsoft-edge/webview2/
+项目与完整简谱语法 https://github.com/sh0TTvT/Reedline

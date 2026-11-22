@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <!-- A controlled foreground receiver for CI. This project is never packaged. -->
+    <AssemblyName>DeltaForceClient-Win64-Shipping</AssemblyName>
+  </PropertyGroup>
+</Project>
