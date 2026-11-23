@@ -2,6 +2,7 @@
 AppId={{1119B4B1-A433-4314-B6FA-1E63ADE789B1}
 AppName=Reedline
 AppVersion={#AppVersion}
+VersionInfoVersion={#AppVersion}
 DefaultDirName={localappdata}\Programs\Reedline
 DefaultGroupName=Reedline
 PrivilegesRequired=lowest
