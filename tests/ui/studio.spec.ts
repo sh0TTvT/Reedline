@@ -29,6 +29,8 @@ test('preview, pause, seek and remap keys with keyboard-accessible dialogs', asy
 
 test('imports, persists, locates and removes a numbered score', async ({page}) => {
   await page.goto('/')
+  await expect(page.getByRole('button',{name:/兰亭序/})).toBeVisible()
+  const originalCount = await page.locator('.song').count()
   await page.getByRole('button',{name:'导入歌曲'}).click()
   await page.getByLabel('选择歌曲文件').setInputFiles({name:'hello.txt',mimeType:'text/plain',buffer:Buffer.from("曲名=试奏曲\nBPM=90\n1 2 #4 5 0 1':2")})
   await expect(page.getByRole('heading',{name:'试奏曲'})).toBeVisible()
@@ -40,7 +42,42 @@ test('imports, persists, locates and removes a numbered score', async ({page}) =
   await page.getByRole('button',{name:'移除',exact:true}).click()
   await expect(page.getByRole('heading',{name:'欢乐颂'})).toBeVisible()
   await page.reload()
-  await expect(page.locator('.song')).toHaveCount(3)
+  await expect(page.locator('.song')).toHaveCount(originalCount)
+})
+
+test('plays bundled scores straight from disk and remembers the selection', async ({page}) => {
+  const catalog = JSON.parse(await readFile('public/scores/index.json', 'utf8'))
+  const expectedCount = catalog.length + 3
+  await page.goto('/')
+  const library = page.getByRole('complementary', {name:'本地曲库'})
+  await expect(library.locator('.song')).toHaveCount(expectedCount)
+  const search = library.getByRole('textbox', {name:'搜索曲目'})
+  const progress = page.getByRole('slider', {name:'全曲进度'})
+  for (const query of ['兰亭序', '歌唱祖国', '反方向的钟', '父亲', '雨爱', '晴天', '得吃小曲', 'takediskrush', '嘉豪小曲']) {
+    await search.fill(query)
+    await expect(library.locator('.song')).toHaveCount(1)
+    await library.locator('.song').click()
+    await expect(page.locator('.hero h2')).toContainText(new RegExp(query, 'i'))
+    await expect(page.locator('.hero-meta')).toContainText(/\d{2,} 音/)
+    await expect(page.getByRole('button', {name:'从曲库移除'})).toHaveCount(0)
+    await page.getByRole('button', {name:'试听', exact:true}).click()
+    await expect(page.getByText('正在试听', {exact:true})).toBeVisible()
+    await expect.poll(async () => Number(await progress.inputValue())).toBeGreaterThan(0.1)
+    await page.getByRole('button', {name:'停止', exact:true}).click()
+  }
+  await page.reload()
+  await expect(page.locator('.hero h2')).toContainText('TAKEDISKRUSH')
+  await expect(library.locator('.song')).toHaveCount(expectedCount)
+})
+
+test('one missing score leaves the rest of the library playable', async ({page}) => {
+  await page.route(url => decodeURIComponent(url.pathname).endsWith('/scores/父亲.txt'), route => route.fulfill({status:404}))
+  await page.goto('/')
+  await expect(page.locator('.toast')).toContainText('父亲.txt')
+  await expect(page.getByRole('button', {name:/父亲/})).toHaveCount(0)
+  await page.getByRole('button', {name:/兰亭序/}).click()
+  await expect(page.getByRole('heading', {name:'兰亭序'})).toBeVisible()
+  await expect(page.getByRole('button', {name:'导入歌曲'})).toBeEnabled()
 })
 
 test('imports a real MIDI, selects its second channel and reports invalid files', async ({page}) => {

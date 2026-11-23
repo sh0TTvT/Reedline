@@ -1,7 +1,7 @@
 export type Note = { midi: number; start: number; duration: number }
 export type Track = { name: string; notes: Note[]; duration: number }
 export type Song = {
-  id: string; title: string; credit: string; kind: '示例' | 'MIDI' | '简谱' | '音频'
+  id: string; title: string; credit: string; kind: '内置曲谱' | 'MIDI' | '简谱' | '音频'
   bpm: number | null; tracks: Track[]; preferred: number; cover: number; addedAt?: number
 }
 export const degrees = [0, 2, 4, 5, 7, 9, 11, 12]

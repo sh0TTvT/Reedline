@@ -1,0 +1,50 @@
+[
+  {
+    "id": "lanting-xu",
+    "file": "兰亭序.mid",
+    "credit": "周杰伦 · wfz2006 八音盒编配",
+    "source": "https://github.com/wfz2006/jaychou-musicbox-scores/blob/76cbfddf93d8416498266564c67412daa33fc757/兰亭序（三十音八音盒）.mid"
+  },
+  {
+    "id": "singing-the-motherland",
+    "file": "歌唱祖国.txt",
+    "credit": "王莘 · chaosheng / HarmoPlay 曲谱",
+    "source": "https://github.com/chaosheng92/HarmoPlay/blob/75569145a6a0796abd0ef7e912391aadf42c3e42/Assets/Seed/歌唱祖国.txt"
+  },
+  {
+    "id": "reverse-clock",
+    "file": "反方向的钟.mid",
+    "credit": "周杰伦 · wfz2006 八音盒编配",
+    "source": "https://github.com/wfz2006/jaychou-musicbox-scores/blob/76cbfddf93d8416498266564c67412daa33fc757/反方向的钟（三十音八音盒）.mid"
+  },
+  {
+    "id": "takediskrush",
+    "file": "TAKEDISKRUSH（嘉豪小曲）.txt",
+    "credit": "N2UtheHartlocker · Airnote 口琴编配",
+    "source": "https://github.com/Atetra2007/airnote/blob/9effa5f134f796778e143058c3ddf7867b970b75/scores/bundled/calibrated-deef8e21913914be.txt"
+  },
+  {
+    "id": "dechi",
+    "file": "寂寞的人伤心的歌（得吃小曲）.mid",
+    "credit": "龙梅子、杨海彪 · 加速口琴版",
+    "source": "https://github.com/gujingyun/delta-melodica/blob/2ef93dc195614db4eb96ce1b9b870e2ef74e147e/website/songs/寂寞的人伤心的歌（得吃小曲是1.75倍速）.mid"
+  },
+  {
+    "id": "father",
+    "file": "父亲.txt",
+    "credit": "筷子兄弟 · HarmonicaPlayer 口琴谱",
+    "source": "https://github.com/lanselanlanxi-wq/HarmonicaPlayer/blob/2832001f35a27936eac5027ba3959c4891545e64/简谱/父亲%20bpm72.txt"
+  },
+  {
+    "id": "rain-love",
+    "file": "雨爱.txt",
+    "credit": "杨丞琳 · HarmonicaPlayer 口琴谱",
+    "source": "https://github.com/lanselanlanxi-wq/HarmonicaPlayer/blob/2832001f35a27936eac5027ba3959c4891545e64/简谱/雨爱%20bpm80-新版.txt"
+  },
+  {
+    "id": "sunny-day",
+    "file": "晴天.txt",
+    "credit": "周杰伦 · HarmonicaPlayer 口琴谱",
+    "source": "https://github.com/lanselanlanxi-wq/HarmonicaPlayer/blob/2832001f35a27936eac5027ba3959c4891545e64/简谱/晴天%20bpm67.txt"
+  }
+]

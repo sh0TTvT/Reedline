@@ -10,6 +10,6 @@ const sources = [
     "1 2 3 1 | 1 2 3 1 | 3 4 5:2 | 3 4 5:2\n5:.5 6:.5 5:.5 4:.5 3 1 | 5:.5 6:.5 5:.5 4:.5 3 1 | 1 5, 1:2 | 1 5, 1:2"],
 ] as const
 export const demos: Song[] = sources.map(([title, credit, bpm, text], i) => ({
-  id: 'demo-' + i, title, credit, kind: '示例', bpm, preferred: 0, cover: i,
+  id: 'demo-' + i, title, credit, kind: '内置曲谱', bpm, preferred: 0, cover: i,
   tracks: [readNotation('BPM=' + bpm + '\n' + text).track],
 }))

@@ -6,6 +6,7 @@ import { Modal } from './components/Modal'
 import { Settings, mouseNames } from './components/Settings'
 import { Timeline } from './components/Timeline'
 import { audition } from './music/audio'
+import { readScoreCatalog } from './music/catalog'
 import { demos } from './music/demos'
 import { activeIndex, arrange, degrees, pitchName, timeText, type Song } from './music/score'
 import { libraryRead, libraryWrite, readSettings, type Settings as Prefs } from './storage'
@@ -34,7 +35,24 @@ export default function App() {
   const note = (player.local === 'playing' || player.state.phase === 'playing') && noteIndex >= 0 ? arr.notes[noteIndex] : null
   const result = songs.filter(s => (s.title + ' ' + s.credit + ' ' + s.kind).toLowerCase().includes(search.trim().toLowerCase()))
   const update = (v: Partial<Prefs>) => setPrefs(p => ({ ...p, ...v }))
-  useEffect(() => { libraryRead().then(custom => setSongs([...custom.sort((a,b) => (b.addedAt ?? 0) - (a.addedAt ?? 0)), ...demos])).catch(() => notice('本地曲库暂时不可用。')).finally(() => setLoaded(true)) }, [notice])
+  useEffect(() => {
+    let mounted = true
+    async function loadLibrary() {
+      const [saved, catalog] = await Promise.allSettled([libraryRead(), readScoreCatalog()])
+      if (!mounted) return
+      const custom = saved.status === 'fulfilled' ? saved.value.sort((a,b) => (b.addedAt ?? 0) - (a.addedAt ?? 0)) : []
+      const bundled = catalog.status === 'fulfilled' ? catalog.value.songs : []
+      setSongs([...custom, ...bundled, ...demos])
+      setLoaded(true)
+      const warnings = []
+      if (saved.status === 'rejected') warnings.push('暂时无法读取已导入的曲目。')
+      if (catalog.status === 'rejected') warnings.push('暂时无法读取内置曲谱目录。')
+      else if (catalog.value.missing.length) warnings.push('无法读取曲谱「' + catalog.value.missing.join('、') + '」。')
+      if (warnings.length) notice(warnings.join(' '))
+    }
+    void loadLibrary()
+    return () => { mounted = false }
+  }, [notice])
   useEffect(() => { try { localStorage.setItem('reedline-settings', JSON.stringify(prefs)) } catch { notice('偏好设置无法保存到本机。') } }, [prefs, notice])
   useEffect(() => { send('editing', { value: !!panel }) }, [panel, player.connected])
   useEffect(() => {
@@ -79,7 +97,7 @@ export default function App() {
         <label className="search"><Icon name="search" size={15}/><input aria-label="搜索曲目" placeholder="搜索曲目" value={search} onChange={e => setSearch(e.target.value)}/></label>
         <div className="song-list">{result.map(s => <button className={'song' + (song.id === s.id ? ' selected' : '')} key={s.id} disabled={player.active}
           onClick={() => choose(s)} aria-pressed={song.id === s.id}><span className={'sleeve sleeve-' + s.cover}><i/></span>
-          <span className="song-copy"><strong>{s.title}</strong><small>{s.kind === '示例' ? '内置曲谱' : s.kind} · {timeText(s.tracks[s.preferred].duration)}</small></span>
+          <span className="song-copy"><strong>{s.title}</strong><small>{s.kind} · {timeText(s.tracks[s.preferred].duration)}</small></span>
           {song.id === s.id && <Icon name="wave" size={15}/>}</button>)}</div>
         {!result.length && <p className="muted small">没有匹配的曲目</p>}
       </div>
@@ -94,7 +112,7 @@ export default function App() {
       </header>
       <section className="hero" aria-label="当前曲目">
         <div className="hero-photo"/><div className="hero-content" key={song.id}><div className="hero-label"><i/> 当前曲目</div>
-          <h2 title={song.title}>{song.title}</h2><p>{song.credit} <span> / </span> {song.kind === '示例' ? '内置曲谱' : '本地曲库'}</p>
+          <h2 title={song.title}>{song.title}</h2><p>{song.credit} <span> / </span> {song.kind === '内置曲谱' ? song.kind : '本地曲库'}</p>
           <div className="hero-meta"><span><Icon name="clock" size={15}/>{timeText(arr.duration / prefs.speed)}</span>
             <span><Icon name="music" size={15}/>{arr.notes.length + ' 音'}</span>{song.bpm && <span>{Math.round(song.bpm * prefs.speed)} BPM</span>}</div>
         </div></section>
@@ -128,7 +146,7 @@ export default function App() {
           <small>{['Do','Re','Mi','Fa','Sol','La','Si','Do′'][i]}</small><b>{key}</b></button>)}</div>
         <div className="key-legend">{['低八度','高八度','升半音'].map((role,i) => <span key={role}><strong>{mouseNames[prefs.buttons[i]]}</strong>{role}</span>)}</div>
       </section>
-      {song.kind !== '示例' && <button className="remove" disabled={busy} onClick={() => setPanel('remove')}><Icon name="trash" size={14}/>从曲库移除</button>}
+      {song.kind !== '内置曲谱' && <button className="remove" disabled={busy} onClick={() => setPanel('remove')}><Icon name="trash" size={14}/>从曲库移除</button>}
     </main>
     {panel === 'settings' && <Settings value={prefs} update={update} close={() => setPanel(null)}/>}
     {panel === 'import' && <ImportDialog initial={files} close={() => setPanel(null)} added={imported}/>}
